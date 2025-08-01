@@ -24,21 +24,32 @@ public class SimpleLibrary {
 
     private void initializeDatabase() {
         try {
-            connection = DriverManager.getConnection("jdbc:sqlite:library.db");
+            // Load MySQL JDBC driver explicitly
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            
+            // MySQL connection string - update these values for your MySQL setup
+            String url = "jdbc:mysql://localhost:3306/library_db";
+            String username = "root";  // Change to your MySQL username
+            String password = "pass";      // Change to your MySQL password
+            
+            connection = DriverManager.getConnection(url, username, password);
             createTables();
             useDatabase = true;
-            System.out.println("Database connected successfully");
+            System.out.println("MySQL database connected successfully");
+        } catch (ClassNotFoundException e) {
+            System.out.println("MySQL driver not found. Please add mysql-connector-java.jar to classpath");
+            useDatabase = false;
         } catch (SQLException e) {
-            System.out.println("Database not available, using in-memory storage");
+            System.out.println("Database not available, using in-memory storage: " + e.getMessage());
             useDatabase = false;
         }
     }
 
     private void createTables() throws SQLException {
         String[] createStatements = {
-            "CREATE TABLE IF NOT EXISTS books (isbn TEXT PRIMARY KEY, title TEXT, author TEXT, status TEXT)",
-            "CREATE TABLE IF NOT EXISTS users (user_id TEXT PRIMARY KEY, name TEXT, borrowed_count INTEGER DEFAULT 0)",
-            "CREATE TABLE IF NOT EXISTS transactions (transaction_id TEXT PRIMARY KEY, book_isbn TEXT, user_id TEXT, borrow_date TEXT, return_date TEXT, is_returned INTEGER DEFAULT 0)"
+            "CREATE TABLE IF NOT EXISTS books (isbn VARCHAR(50) PRIMARY KEY, title VARCHAR(255), author VARCHAR(255), status VARCHAR(20))",
+            "CREATE TABLE IF NOT EXISTS users (user_id VARCHAR(50) PRIMARY KEY, name VARCHAR(255), borrowed_count INT DEFAULT 0)",
+            "CREATE TABLE IF NOT EXISTS transactions (transaction_id VARCHAR(50) PRIMARY KEY, book_isbn VARCHAR(50), user_id VARCHAR(50), borrow_date VARCHAR(50), return_date VARCHAR(50), is_returned INT DEFAULT 0)"
         };
         
         for (String sql : createStatements) {

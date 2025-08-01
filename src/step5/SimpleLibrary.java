@@ -1,7 +1,9 @@
 package step5;
 
-import java.util.*;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class SimpleLibrary {
     private HashMap<String, Book> books;
@@ -22,23 +24,28 @@ public class SimpleLibrary {
 
     private void initializeDatabase() {
         try {
-            connection = DriverManager.getConnection("jdbc:sqlite:library.db");
+            // MySQL connection string - update these values for your MySQL setup
+            String url = "jdbc:mysql://localhost:3306/library_db";
+            String username = "root";  // Change to your MySQL username
+            String password = "";      // Change to your MySQL password
+
+            connection = DriverManager.getConnection(url, username, password);
             createTables();
             useDatabase = true;
-            System.out.println("Database connected successfully");
+            System.out.println("MySQL database connected successfully");
         } catch (SQLException e) {
-            System.out.println("Database not available, using in-memory storage");
+            System.out.println("Database not available, using in-memory storage: " + e.getMessage());
             useDatabase = false;
         }
     }
 
     private void createTables() throws SQLException {
         String[] createStatements = {
-            "CREATE TABLE IF NOT EXISTS books (isbn TEXT PRIMARY KEY, title TEXT, author TEXT, status TEXT)",
-            "CREATE TABLE IF NOT EXISTS users (user_id TEXT PRIMARY KEY, name TEXT, borrowed_count INTEGER DEFAULT 0)",
-            "CREATE TABLE IF NOT EXISTS transactions (transaction_id TEXT PRIMARY KEY, book_isbn TEXT, user_id TEXT, borrow_date TEXT, return_date TEXT, is_returned INTEGER DEFAULT 0)"
+                "CREATE TABLE IF NOT EXISTS books (isbn VARCHAR(50) PRIMARY KEY, title VARCHAR(255), author VARCHAR(255), status VARCHAR(20))",
+                "CREATE TABLE IF NOT EXISTS users (user_id VARCHAR(50) PRIMARY KEY, name VARCHAR(255), borrowed_count INT DEFAULT 0)",
+                "CREATE TABLE IF NOT EXISTS transactions (transaction_id VARCHAR(50) PRIMARY KEY, book_isbn VARCHAR(50), user_id VARCHAR(50), borrow_date VARCHAR(50), return_date VARCHAR(50), is_returned INT DEFAULT 0)"
         };
-        
+
         for (String sql : createStatements) {
             connection.createStatement().execute(sql);
         }
@@ -46,7 +53,7 @@ public class SimpleLibrary {
 
     public boolean addBook(Book book) {
         if (book == null) return false;
-        
+
         if (useDatabase) {
             try {
                 String sql = "INSERT INTO books (isbn, title, author, status) VALUES (?, ?, ?, ?)";
@@ -60,7 +67,7 @@ public class SimpleLibrary {
                 return false;
             }
         }
-        
+
         books.put(book.getIsbn(), book);
         return true;
     }
@@ -68,10 +75,10 @@ public class SimpleLibrary {
     public boolean updateBook(String isbn, String newTitle, String newAuthor) {
         Book book = books.get(isbn);
         if (book == null) return false;
-        
+
         book.setTitle(newTitle);
         book.setAuthor(newAuthor);
-        
+
         if (useDatabase) {
             try {
                 String sql = "UPDATE books SET title = ?, author = ? WHERE isbn = ?";
@@ -84,7 +91,7 @@ public class SimpleLibrary {
                 return false;
             }
         }
-        
+
         return true;
     }
 
@@ -92,7 +99,7 @@ public class SimpleLibrary {
         Book book = books.get(isbn);
         if (book == null) return false;
         if (book.getStatus() == BookStatus.BORROWED) return false;
-        
+
         if (useDatabase) {
             try {
                 String sql = "DELETE FROM books WHERE isbn = ?";
@@ -103,14 +110,14 @@ public class SimpleLibrary {
                 return false;
             }
         }
-        
+
         books.remove(isbn);
         return true;
     }
 
     public boolean addUser(User user) {
         if (user == null) return false;
-        
+
         if (useDatabase) {
             try {
                 String sql = "INSERT INTO users (user_id, name, borrowed_count) VALUES (?, ?, ?)";
@@ -123,7 +130,7 @@ public class SimpleLibrary {
                 return false;
             }
         }
-        
+
         users.put(user.getUserId(), user);
         return true;
     }
@@ -131,9 +138,9 @@ public class SimpleLibrary {
     public boolean updateUser(String userId, String newName) {
         User user = users.get(userId);
         if (user == null) return false;
-        
+
         user.setName(newName);
-        
+
         if (useDatabase) {
             try {
                 String sql = "UPDATE users SET name = ? WHERE user_id = ?";
@@ -145,7 +152,7 @@ public class SimpleLibrary {
                 return false;
             }
         }
-        
+
         return true;
     }
 
@@ -153,7 +160,7 @@ public class SimpleLibrary {
         User user = users.get(userId);
         if (user == null) return false;
         if (user.getBorrowedBooksCount() > 0) return false;
-        
+
         if (useDatabase) {
             try {
                 String sql = "DELETE FROM users WHERE user_id = ?";
@@ -164,7 +171,7 @@ public class SimpleLibrary {
                 return false;
             }
         }
-        
+
         users.remove(userId);
         return true;
     }
@@ -305,7 +312,7 @@ public class SimpleLibrary {
             String sql = "SELECT * FROM books";
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
-            
+
             books.clear();
             while (rs.next()) {
                 Book book = new Book(rs.getString("isbn"), rs.getString("title"), rs.getString("author"));
@@ -322,7 +329,7 @@ public class SimpleLibrary {
             String sql = "SELECT * FROM users";
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
-            
+
             users.clear();
             while (rs.next()) {
                 User user = new User(rs.getString("user_id"), rs.getString("name"));
@@ -338,13 +345,13 @@ public class SimpleLibrary {
             String sql = "SELECT * FROM transactions";
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
-            
+
             transactions.clear();
             while (rs.next()) {
                 BorrowTransaction transaction = new BorrowTransaction(
-                    rs.getString("transaction_id"),
-                    rs.getString("book_isbn"),
-                    rs.getString("user_id")
+                        rs.getString("transaction_id"),
+                        rs.getString("book_isbn"),
+                        rs.getString("user_id")
                 );
                 if (rs.getInt("is_returned") == 1) {
                     transaction.markAsReturned();
