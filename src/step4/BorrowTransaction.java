@@ -3,12 +3,12 @@ package step4;
 import java.util.*;
 
 public class BorrowTransaction {
-    private String transactionId;
-    private String bookIsbn;
-    private String userId;
-    private Date borrowDate;
-    private Date returnDate;
-    private boolean isReturned;
+    public String transactionId;
+    public String bookIsbn;
+    public String userId;
+    public Date borrowDate;
+    public Date returnDate;
+    public boolean isReturned;
 
     public BorrowTransaction(String transactionId, String bookIsbn, String userId) {
         this.transactionId = transactionId;
@@ -20,42 +20,15 @@ public class BorrowTransaction {
     }
 
 
-    public String getTransactionId() {
-        return transactionId;
-    }
-
-    public String getBookIsbn() {
-        return bookIsbn;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public Date getBorrowDate() {
-        return borrowDate;
-    }
-
-    public Date getReturnDate() {
-        return returnDate;
-    }
-
-    public boolean isReturned() {
-        return isReturned;
-    }
-
 
     public void markAsReturned() {
         this.returnDate = new Date();
         this.isReturned = true;
     }
 
-    public String getStatus() {
-        return isReturned ? "Returned" : "Active";
-    }
 
     public String toString() {
-        return "Transaction " + transactionId + ": Book " + bookIsbn + " borrowed by " + userId + " - " + getStatus();
+        return "Transaction " + transactionId + ": Book " + bookIsbn + " borrowed by " + userId + " - " + (isReturned ? "Yes" : "No");
     }
 
 }
