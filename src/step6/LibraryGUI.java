@@ -5,16 +5,13 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
 public class LibraryGUI extends JFrame {
-    private final SimpleLibrary library;
-    private JTextField isbnField, titleField, authorField;
-    private JTextField userIdField, nameField;
-    private JTextField borrowIsbnField, borrowUserIdField;
-    private JTextField returnIsbnField, returnUserIdField;
+    private final SimpleLibrary library = new SimpleLibrary();
+    private JTextField isbnField, titleField, authorField, userIdField, nameField;
+    private JTextField borrowIsbnField, borrowUserIdField, returnIsbnField, returnUserIdField;
     private JTextArea statusArea;
     private DefaultTableModel booksModel, usersModel, transactionsModel;
 
     public LibraryGUI() {
-        library = new SimpleLibrary();
         initializeGUI();
     }
 
@@ -35,19 +32,13 @@ public class LibraryGUI extends JFrame {
 
     private JPanel createBooksTab() {
         JPanel panel = new JPanel(new BorderLayout());
-
-        // Add form at top
-        JPanel form = createFormPanel("Add Book", new String[]{"ISBN:", "Title:", "Author:"},
+        panel.add(createFormPanel("Add Book", new String[]{"ISBN:", "Title:", "Author:"},
                 new JTextField[]{isbnField = new JTextField(), titleField = new JTextField(), authorField = new JTextField()},
-                this::addBook);
-        panel.add(form, BorderLayout.NORTH);
+                this::addBook), BorderLayout.NORTH);
 
-        // Add table in center
         booksModel = new DefaultTableModel(new String[]{"ISBN", "Title", "Author", "Status"}, 0);
-        JTable table = new JTable(booksModel);
-        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        panel.add(new JScrollPane(new JTable(booksModel)), BorderLayout.CENTER);
 
-        // Add status at bottom
         statusArea = new JTextArea(3, 0);
         statusArea.setEditable(false);
         statusArea.setBorder(BorderFactory.createTitledBorder("Status"));
@@ -58,17 +49,12 @@ public class LibraryGUI extends JFrame {
 
     private JPanel createUsersTab() {
         JPanel panel = new JPanel(new BorderLayout());
-
-        // Add form at top
-        JPanel form = createFormPanel("Add User", new String[]{"User ID:", "Name:"},
+        panel.add(createFormPanel("Add User", new String[]{"User ID:", "Name:"},
                 new JTextField[]{userIdField = new JTextField(), nameField = new JTextField()},
-                this::addUser);
-        panel.add(form, BorderLayout.NORTH);
+                this::addUser), BorderLayout.NORTH);
 
-        // Add table in center
         usersModel = new DefaultTableModel(new String[]{"User ID", "Name", "Books Borrowed"}, 0);
-        JTable table = new JTable(usersModel);
-        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        panel.add(new JScrollPane(new JTable(usersModel)), BorderLayout.CENTER);
 
         return panel;
     }
@@ -76,9 +62,7 @@ public class LibraryGUI extends JFrame {
     private JPanel createTransactionsTab() {
         JPanel panel = new JPanel(new BorderLayout());
 
-        // Add borrow/return forms at top
         JPanel forms = new JPanel(new GridLayout(1, 2, 10, 0));
-
         forms.add(createFormPanel("Borrow Book", new String[]{"ISBN:", "User ID:"},
                 new JTextField[]{borrowIsbnField = new JTextField(), borrowUserIdField = new JTextField()},
                 this::borrowBook));
@@ -87,10 +71,8 @@ public class LibraryGUI extends JFrame {
                 this::returnBook));
         panel.add(forms, BorderLayout.NORTH);
 
-        // Add table in center
         transactionsModel = new DefaultTableModel(new String[]{"ID", "Book", "User", "Status"}, 0);
-        JTable table = new JTable(transactionsModel);
-        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        panel.add(new JScrollPane(new JTable(transactionsModel)), BorderLayout.CENTER);
 
         return panel;
     }
@@ -106,17 +88,13 @@ public class LibraryGUI extends JFrame {
         }
 
         JButton button = new JButton(title);
-        button.addActionListener(e -> {
-            action.run();
-            refreshTables();
-        });
+        button.addActionListener(e -> { action.run(); refreshTables(); });
         form.add(button);
         form.add(new JLabel(""));
 
         panel.add(form, BorderLayout.CENTER);
         return panel;
     }
-
 
     private void addBook() {
         if (validateFields(isbnField, titleField, authorField)) {
@@ -174,23 +152,20 @@ public class LibraryGUI extends JFrame {
     private void refreshTables() {
         if (booksModel != null) {
             booksModel.setRowCount(0);
-            for (Book book : library.books.values()) {
-                booksModel.addRow(new Object[]{book.isbn, book.title, book.author, book.status});
-            }
+            library.books.values().forEach(book ->
+                    booksModel.addRow(new Object[]{book.isbn, book.title, book.author, book.status}));
         }
 
         if (usersModel != null) {
             usersModel.setRowCount(0);
-            for (User user : library.users.values()) {
-                usersModel.addRow(new Object[]{user.userId, user.name, user.borrowedBooks.size() + "/" + User.MAX_BOOKS_LIMIT});
-            }
+            library.users.values().forEach(user ->
+                    usersModel.addRow(new Object[]{user.userId, user.name, user.borrowedBooks.size() + "/" + User.MAX_BOOKS_LIMIT}));
         }
 
         if (transactionsModel != null) {
             transactionsModel.setRowCount(0);
-            for (BorrowTransaction t : library.transactions.values()) {
-                transactionsModel.addRow(new Object[]{t.transactionId, t.bookIsbn, t.userId, t.isReturned ? "Returned" : "Active"});
-            }
+            library.transactions.values().forEach(t ->
+                    transactionsModel.addRow(new Object[]{t.transactionId, t.bookIsbn, t.userId, t.isReturned ? "Returned" : "Active"}));
         }
     }
 
